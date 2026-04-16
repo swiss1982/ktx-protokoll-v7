@@ -1,0 +1,1382 @@
+<!DOCTYPE html><html lang="de"><head><meta charset="UTF-8" /><meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" /><title>Schachtprotokoll – Komplette App</title><link rel="manifest" href="manifest.json"><meta name="theme-color" content="#0f172a"><script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script><style>
+    :root{
+      --bg:#eef2f7;
+      --card:#fff;
+      --text:#0f172a;
+      --muted:#6b7280;
+      --line:#e5e7eb;
+      --primary:#0f172a;
+      --danger:#ef4444;
+      --success:#16a34a;
+    }
+    *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+    body{
+      margin:0;
+      font-family:Arial,sans-serif;
+      background:var(--bg);
+      color:var(--text);
+      padding-bottom:96px;
+    }
+    .wrapper{
+      max-width:420px;
+      margin:0 auto;
+      padding:20px;
+    }
+    .container{
+      background:var(--card);
+      padding:20px;
+      border-radius:20px;
+      margin-bottom:18px;
+      box-shadow:0 2px 10px rgba(15,23,42,.04);
+    }
+    .badge{
+      display:inline-block;
+      background:#e2e8f0;
+      color:#334155;
+      font-size:13px;
+      padding:8px 12px;
+      border-radius:999px;
+      margin-bottom:12px;
+    }
+    h1{font-size:24px;margin:0 0 8px}
+    h3{font-size:21px;margin:0 0 12px}
+    .desc,.small,.pdf-note,.status-note{color:var(--muted)}
+    .desc{font-size:14px;line-height:1.4;margin:0}
+    .small{font-size:13px;margin:-4px 0 10px}
+    .pdf-note{font-size:12px;line-height:1.35;margin-top:8px}
+    .status-note{font-size:12px;margin-top:8px}
+    .pill-info{
+      display:inline-block;
+      font-size:12px;
+      padding:6px 10px;
+      border-radius:999px;
+      background:#ecfeff;
+      color:#155e75;
+      margin-bottom:10px;
+    }
+    label{
+      display:block;
+      font-weight:600;
+      font-size:15px;
+      margin:10px 0 6px;
+    }
+    input,select,textarea{
+      width:100%;
+      padding:14px 12px;
+      border-radius:14px;
+      border:1px solid var(--line);
+      background:#fff;
+      font-size:16px;
+      margin-bottom:10px;
+      color:var(--text);
+    }
+    input[type="file"]{padding:10px}
+    textarea{min-height:110px;resize:vertical}
+    .btn{
+      width:100%;
+      border:none;
+      background:var(--primary);
+      color:#fff;
+      padding:18px 16px;
+      border-radius:999px;
+      font-size:18px;
+      cursor:pointer;
+    }
+    .btn.secondary{background:#1f2937}
+    .btn.ghost{
+      background:#fff;
+      color:var(--text);
+      border:1px solid var(--line);
+    }
+    .btn.success{background:var(--success)}
+
+    .btn-green{
+      background:#16a34a;
+      color:#fff;
+    }
+    .btn-blue{
+      background:#2563eb;
+      color:#fff;
+    }
+    .btn-einlauf{
+      background:#16a34a;
+      color:#fff;
+    }
+    .inner{
+      border:1px solid var(--line);
+      border-radius:16px;
+      padding:12px;
+      margin-bottom:12px;
+      position:relative;
+      background:#fff;
+    }
+    .delete,.photoDelete{
+      position:absolute;
+      top:8px;
+      right:8px;
+      width:32px;
+      height:32px;
+      border:none;
+      border-radius:50%;
+      background:var(--danger);
+      color:#fff;
+      font-weight:700;
+      cursor:pointer;
+      line-height:32px;
+      text-align:center;
+      font-size:18px;
+    }
+    canvas{
+      width:100%;
+      display:block;
+      border-radius:14px;
+      background:#fff;
+    }
+    .photoItem{
+      position:relative;
+      margin-bottom:12px;
+      background:#fff;
+      border-radius:14px;
+    }
+    .photoItem img{
+      width:100%;
+      display:block;
+      border-radius:14px;
+      border:1px solid var(--line);
+      margin-bottom:8px;
+    }
+    .row2{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:10px;
+    }
+    .sig-wrap{
+      border:1px solid var(--line);
+      border-radius:16px;
+      overflow:hidden;
+      background:#fff;
+    }
+    #signature{
+      touch-action:none;
+      background:
+        linear-gradient(to bottom, rgba(255,255,255,0.95), rgba(255,255,255,0.95)),
+        repeating-linear-gradient(180deg, transparent, transparent 34px, #f1f5f9 35px);
+    }
+    .action-row{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:10px;
+    }
+    .floating-wrap{
+      position:fixed;
+      left:50%;
+      transform:translateX(-50%);
+      bottom:14px;
+      width:min(92%, 420px);
+      z-index:999;
+      filter:drop-shadow(0 8px 22px rgba(15,23,42,.18));
+    }
+
+    .btn-main + .btn-main {
+      margin-top: 18px !important;
+    }
+    .preview-btn {
+      margin-top: 22px !important;
+    }
+  
+#saveMasterBtn{
+  background:#16a34a;
+  color:#fff;
+  border:none;
+  border-radius:999px;
+  padding:18px 16px;
+  width:100%;
+  font-size:18px;
+  cursor:pointer;
+  margin-top:10px;
+}
+#clearMasterBtn{
+  background:#dc2626;
+  color:#fff;
+  border:none;
+  border-radius:999px;
+  padding:18px 16px;
+  width:100%;
+  font-size:18px;
+  cursor:pointer;
+  margin-top:10px;
+}
+
+
+
+
+</style></head><body><div class="wrapper"><div class="container"><div class="badge">Schachtprotokoll – komplette Version</div><h1>Neues Schachtprotokoll</h1><p class="desc">Formular, Schacht, Auslauf, Einläufe, Fotos, Grafik und PDF in einer App.</p></div><div class="container"><label>Projektname</label><input id="projektname" type="text"><label>Baustelle</label><input id="baustelle" type="text"><div class="row2"><div><label>Datum</label><input id="datum" type="date"></div><div><label>Uhrzeit</label><input id="uhrzeit" type="time"></div></div><label>Mitarbeiter</label><input id="mitarbeiter" type="text"><label>Schacht-Nummer</label><input id="schachtNummer" type="text"><label>Standort / Adresse</label><input id="standort" type="text"><div style="margin-top:10px;">
+        <button class="btn secondary" id="saveMasterBtn" type="button">Stammdaten speichern</button>
+        <button class="btn ghost" id="clearMasterBtn" type="button" style="margin-top:8px;">Stammdaten löschen</button>
+      </div></div><div class="container"><label>Schacht-Typ</label><select id="schachtTyp"><option>KS – Kontrollschacht</option><option>SS – Schlammsammler</option><option>RW – Regenwasserschacht</option><option>DW – Dachwasserschacht</option><option>ES – Einlaufschacht</option><option>ÖA – Ölabscheider</option></select><label>Wasserart</label><select id="wasserart"><option>Schmutzwasser</option><option>Regenwasser</option><option>Mischwasser</option></select><label>Zugänglichkeit</label><select id="zugaenglichkeit"><option>Gut</option><option>Schlecht</option><option>Überdeckt</option></select><label>Form</label><select id="form"><option>Rund</option><option>Eckig</option><option>Oval</option><option>Rechteckig</option></select><label>Schacht-Durchmesser</label><select id="shaft"><option>300 mm</option><option>500 mm</option><option selected>600 mm</option><option>800 mm</option><option>1000 mm</option><option>600 / 800 mm</option><option>600 / 800 / 1000 mm</option></select><label>Individueller Durchmesser</label><input id="shaftCustom" type="text" placeholder="z. B. 400 x 600 oder 750"><div class="row2"><div><label>Deckel-Durchmesser</label><input id="deckelDurchmesser" type="text" placeholder="z. B. 620"></div><div><label>Tiefe</label><input id="tiefe" type="text" placeholder="z. B. 1.20"></div></div><label>Material</label><select id="schachtMaterial"><option>Beton</option><option>PVC</option><option>Steinzeug</option><option>Unbekannt</option><option>Saniert</option></select><label>Zustand</label><select id="zustand"><option>Gut</option><option>In Ordnung</option><option>Beschädigt</option></select><label>Deckelzustand</label><select id="deckelzustand"><option>In Ordnung</option><option>Beschädigt</option><option>Fehlt</option><option>Andere</option></select><label>Deckelmaterial</label><select id="deckelMaterial"><option>Beton</option><option>Guss</option><option>Kunststoff</option><option>Andere</option></select><label>Geruch</label><select id="geruch"><option>Unauffällig</option><option>Stark</option></select><label>Wasserstand</label><select id="wasserstand"><option>Trocken</option><option>Nass</option></select><label>Verschmutzung</label><select id="verschmutzung"><option>Leicht</option><option>Stark</option></select><label>Bemerkungen</label><textarea id="bemerkungen" placeholder="Zusätzliche Feststellungen, Schäden oder Hinweise..."></textarea></div><div class="container"><h3>Auslauf</h3><div class="small">Position: 12 Uhr</div><label>Material</label><select id="outM"><option>Beton</option><option>PVC</option><option>Steinzeug</option><option>Unbekannt</option><option>Saniert</option></select><label>Durchmesser</label><select id="outD"><option>100 mm</option><option selected>120 mm</option><option>150 mm</option><option>200 mm</option></select><label>Höhe</label><input id="outHoehe" type="text" placeholder="z. B. 0.80"><label>Durchmesser individuell</label><input id="outDCustom" type="text" placeholder="z. B. 130"></div><div class="container"><h3>Einläufe</h3><div id="inflowWarning" style="color:#dc2626;font-weight:600;margin-bottom:8px;"></div><div id="inflows"></div><button class="btn btn-einlauf" id="addInflowBtn" type="button">+ Einlauf hinzufügen</button></div><div class="container"><h3>Fotos</h3><div class="pill-info">Kamera öffnet direkt auf dem Handy</div><input id="photoInput" type="file" accept="image/*" capture="environment" multiple><div id="photoPreview"></div></div><div class="container"><h3>Unterschrift</h3><div class="small">Mit dem Finger direkt auf dem Display unterschreiben.</div><div class="sig-wrap"><canvas id="signature" width="720" height="240"></canvas></div><div class="action-row" style="margin-top:10px;"><button class="btn ghost" id="clearSignatureBtn" type="button">Unterschrift löschen</button><button class="btn success" id="saveSignatureBtn" type="button">Unterschrift speichern</button></div></div><div class="container"><h3>Grafik</h3><canvas id="grafik" width="720" height="720"></canvas></div><div class="container"><h3>PDF</h3><button class="btn btn-green" id="pdfBtn" type="button">PDF speichern</button><button class="btn btn-blue preview-btn" id="previewBtn" type="button">Live Vorschau</button><div class="pdf-note">Auslauf und Einläufe werden im PDF kompakt in einer Zeile ausgegeben.</div><div class="status-note" id="saveStatus">Autosave aktiv.</div></div><div class="container"><h3>Zurücksetzen</h3><div class="small">Löscht alle gespeicherten Formulardaten, Fotos und die Unterschrift nur auf diesem Gerät.</div><button class="btn ghost" id="resetBtn" type="button">Alle Daten löschen</button></div></div><script>
+(() => {
+  "use strict";
+
+  const STORAGE_KEY = "schachtprotokoll_final_complete_v1";
+  const MASTER_KEY = "schachtprotokoll_masterdata_v1";
+  const photoStore = [];
+  let drawTimeout = null;
+
+  const $ = (id) => document.getElementById(id);
+
+  const dom = {
+    projektname: $("projektname"),
+    baustelle: $("baustelle"),
+    datum: $("datum"),
+    uhrzeit: $("uhrzeit"),
+    mitarbeiter: $("mitarbeiter"),
+    schachtNummer: $("schachtNummer"),
+    standort: $("standort"),
+    schachtTyp: $("schachtTyp"),
+    zugaenglichkeit: $("zugaenglichkeit"),
+    form: $("form"),
+    shaft: $("shaft"),
+    shaftCustom: $("shaftCustom"),
+    deckelDurchmesser: $("deckelDurchmesser"),
+    tiefe: $("tiefe"),
+    schachtMaterial: $("schachtMaterial"),
+    zustand: $("zustand"),
+    deckelzustand: $("deckelzustand"),
+    geruch: $("geruch"),
+    wasserstand: $("wasserstand"),
+    verschmutzung: $("verschmutzung"),
+    bemerkungen: $("bemerkungen"),
+    outD: $("outD"),
+    outDCustom: $("outDCustom"),
+    outHoehe: $("outHoehe"),
+    outM: $("outM"),
+    inflows: $("inflows"),
+    addInflowBtn: $("addInflowBtn"),
+    photoInput: $("photoInput"),
+    photoPreview: $("photoPreview"),
+    signature: $("signature"),
+    clearSignatureBtn: $("clearSignatureBtn"),
+    saveSignatureBtn: $("saveSignatureBtn"),
+    grafik: $("grafik"),
+    pdfBtn: $("pdfBtn"),
+    previewBtn: $("previewBtn"),
+    resetBtn: $("resetBtn"),
+    saveMasterBtn: $("saveMasterBtn"),
+    clearMasterBtn: $("clearMasterBtn"),
+    saveStatus: $("saveStatus"),
+    wasserart: $("wasserart"),
+    deckelMaterial: $("deckelMaterial")
+  };
+
+  function vibrate(ms = 40){
+    if(navigator.vibrate) navigator.vibrate(ms);
+  }
+
+  function setSaveStatus(text){
+    dom.saveStatus.textContent = text;
+  }
+
+  function autoDateTime(){
+    const d = new Date();
+    const datum = d.toISOString().split("T")[0];
+    const uhrzeit = d.toTimeString().slice(0,5);
+
+    const datumEl = document.getElementById("datum");
+    const uhrzeitEl = document.getElementById("uhrzeit");
+
+    if(datumEl){
+      if(datumEl.tagName === "SELECT"){
+        datumEl.innerHTML = `<option value="${datum}" selected>${datum}</option>`;
+      } else {
+        datumEl.value = datum;
+      }
+    }
+
+    if(uhrzeitEl){
+      if(uhrzeitEl.tagName === "SELECT"){
+        uhrzeitEl.innerHTML = `<option value="${uhrzeit}" selected>${uhrzeit}</option>`;
+      } else {
+        uhrzeitEl.value = uhrzeit;
+      }
+    }
+  }
+
+  function ensureMm(value){
+    const v = String(value || "").trim();
+    if(!v) return "-";
+    // If DN (Nennweite), do NOT add mm
+    if(/^DN\s*/i.test(v)) return v;
+    return /mm$/i.test(v) ? v : v + " mm";
+  }
+
+  function ensureMeter(value){
+    const digits = String(value || "").replace(/\D/g, "");
+    if(!digits) return "-";
+
+    const num = digits.padStart(3, "0");
+    const intPart = num.slice(0, -2);
+    const decPart = num.slice(-2);
+
+    return parseFloat(intPart + "." + decPart).toFixed(2) + " m";
+  }
+
+  function normalizeDiameterInput(value){
+    return String(value || "")
+      .replace(/,/g, ".")
+      .replace(/\s+/g, " ")
+      .trim()
+      .toLowerCase();
+  }
+
+  function getNormCheckResult(){
+    const tiefeRaw = String(dom.tiefe.value || "").replace(/,/g, ".").trim();
+    const tiefe = parseFloat(tiefeRaw);
+    if(!Number.isFinite(tiefe)){
+      return { status: "nicht erfüllt", reason: "Tiefe fehlt oder ist ungültig" };
+    }
+
+    const inflowCount = collectInflows().length;
+    const shaftValue = dom.shaftCustom.value.trim() || dom.shaft.value;
+    const normalized = normalizeDiameterInput(shaftValue);
+
+    const is800 = /^0?\.?(8)\s*m$/.test(normalized) || /^800\s*mm$/.test(normalized) || normalized === "800";
+    const is1000 = /^1(\.0+)?\s*m$/.test(normalized) || /^1000\s*mm$/.test(normalized) || normalized === "1000";
+    const isOval = [
+      "900 / 1100 mm",
+      "900/1100 mm",
+      "900 / 1100",
+      "900/1100",
+      "0.9 / 1.1 m",
+      "0.9/1.1 m",
+      "0,9 / 1,1 m",
+      "0,9/1,1 m"
+    ].includes(normalized);
+
+    let allowed = [];
+
+    if(tiefe <= 0.6){
+      allowed = ["800"];
+    } else if(tiefe <= 1.5){
+      if(inflowCount <= 2){
+        allowed = ["800"];
+      } else {
+        allowed = ["1000", "OVAL"];
+      }
+    } else {
+      allowed = ["1000", "OVAL"];
+    }
+
+    const ok = (allowed.includes("800") && is800)
+      || (allowed.includes("1000") && is1000)
+      || (allowed.includes("OVAL") && isOval);
+
+    if(ok){
+      return { status: "erfüllt", reason: "" };
+    }
+
+    let expectedLabel = "-";
+    if(allowed.length === 1 && allowed[0] === "800") expectedLabel = "800 mm";
+    if(allowed.length === 2 && allowed.includes("1000") && allowed.includes("OVAL")) expectedLabel = "1000 mm oder oval 900 / 1100 mm";
+
+    return {
+      status: "nicht erfüllt",
+      reason: "Erforderlich laut Norm: " + expectedLabel
+    };
+  }
+
+  function getShaftLabel(){
+    return dom.shaftCustom.value.trim() ? ensureMm(dom.shaftCustom.value.trim()) : dom.shaft.value;
+  }
+
+  function getOutLabel(){
+    return dom.outDCustom.value.trim() ? ensureMm(dom.outDCustom.value.trim()) : dom.outD.value;
+  }
+
+  function angle(clock){
+    return (clock * 30 - 90) * Math.PI / 180;
+  }
+
+  function getEdgePoint(a, formValue){
+    const dx = Math.cos(a), dy = Math.sin(a);
+
+    if(formValue === "Rund"){
+      return {x:360 + dx*150, y:360 + dy*150};
+    }
+    if(formValue === "Oval"){
+      const rx = 180, ry = 130;
+      const scale = 1 / Math.sqrt((dx*dx)/(rx*rx) + (dy*dy)/(ry*ry));
+      return {x:360 + dx*scale, y:360 + dy*scale};
+    }
+    if(formValue === "Eckig"){
+      const half = 150;
+      const scale = Math.min(half/Math.abs(dx || 0.0001), half/Math.abs(dy || 0.0001));
+      return {x:360 + dx*scale, y:360 + dy*scale};
+    }
+    const halfW = 160, halfH = 110;
+    const scale = Math.min(halfW/Math.abs(dx || 0.0001), halfH/Math.abs(dy || 0.0001));
+    return {x:360 + dx*scale, y:360 + dy*scale};
+  }
+
+  function drawShape(ctx, formValue){
+    ctx.lineWidth = 3;
+    ctx.strokeStyle = "#111";
+
+    if(formValue === "Rund"){
+      ctx.beginPath();
+      ctx.arc(360,360,150,0,Math.PI*2);
+      ctx.stroke();
+    } else if(formValue === "Eckig"){
+      ctx.strokeRect(210,210,300,300);
+    } else if(formValue === "Oval"){
+      ctx.beginPath();
+      ctx.ellipse(360,360,180,130,0,0,Math.PI*2);
+      ctx.stroke();
+    } else {
+      ctx.strokeRect(200,250,320,220);
+    }
+  }
+
+  function drawPipeText(ctx, a, offset, index, count, dText, mText){
+    const perpX = -Math.sin(a), perpY = Math.cos(a);
+    const textOffset = offset * 4.5;
+    const lineOffset = (index - (count - 1) / 2) * 28;
+
+    let tx = 360 + Math.cos(a)*285 + perpX*textOffset + Math.cos(a)*lineOffset;
+    let ty = 360 + Math.sin(a)*285 + perpY*textOffset + Math.sin(a)*lineOffset;
+
+    let align = Math.abs(Math.cos(a)) < 0.2 ? "center" : (Math.cos(a) > 0 ? "left" : "right");
+    ctx.textAlign = align;
+    ctx.fillStyle = "#111";
+    ctx.fillText(dText, tx, ty);
+    ctx.fillStyle = "#666";
+    ctx.fillText(mText, tx, ty + 14);
+    ctx.fillStyle = "#111";
+  }
+
+  function collectInflows(){
+    return [...dom.inflows.querySelectorAll(".inflow-item")].map(el => ({
+      pos: el.querySelector(".pos").value,
+      d: el.querySelector(".d").value,
+      dCustom: el.querySelector(".dCustom").value,
+      hoehe: el.querySelector(".hoehe").value,
+      m: el.querySelector(".m").value
+    }));
+  }
+
+  function drawGraphic(){
+    const ctx = dom.grafik.getContext("2d");
+    ctx.clearRect(0,0,dom.grafik.width,dom.grafik.height);
+    ctx.font = "14px Arial";
+    ctx.fillStyle = "#111";
+
+    drawShape(ctx, dom.form.value);
+    ctx.textAlign = "center";
+    ctx.fillText("Schacht " + getShaftLabel(), 360, 360);
+
+    const outA = angle(12);
+    const outP = getEdgePoint(outA, dom.form.value);
+    const outStart = {x:360 + Math.cos(outA)*240, y:360 + Math.sin(outA)*240};
+    ctx.beginPath();
+    ctx.moveTo(outStart.x, outStart.y);
+    ctx.lineTo(outP.x, outP.y);
+    ctx.stroke();
+    drawPipeText(ctx, outA, 0, 0, 1, getOutLabel(), dom.outM.value);
+
+    const items = collectInflows().map(item => ({
+      clock: +item.pos,
+      d: ensureMm(item.dCustom.trim() || item.d),
+      m: item.m
+    }));
+
+    const groups = {};
+    items.forEach(item => {
+      if(!groups[item.clock]) groups[item.clock] = [];
+      groups[item.clock].push(item);
+    });
+
+    Object.keys(groups).forEach(clockKey => {
+      const arr = groups[clockKey];
+      const baseClock = +clockKey;
+
+      // 12 Uhr exakt gleich behandeln wie 6 Uhr:
+      // keine Sonderlogik, gleiche Fächerung über den Offset.
+      arr.forEach((it, i) => {
+        let a;
+const center = (arr.length - 1) / 2;
+
+if(baseClock === 12){
+    const spread = 0.12;
+    a = angle(baseClock + (i - center) * spread);
+} else {
+    a = angle(baseClock);
+}
+        const p = getEdgePoint(a, dom.form.value);
+
+        let spacing = 12;
+
+// nur oben weiter fächern wenn mehrere
+if (baseClock === 12 && arr.length > 1) {
+    spacing = 26;
+}
+
+let offset = (i - (arr.length - 1) / 2) * spacing;
+
+// einzelner Einlauf oben versetzen
+if (baseClock === 12 && arr.length === 1) {
+    offset = 20;
+}
+        const perpX = -Math.sin(a), perpY = Math.cos(a);
+
+        const sx = 360 + Math.cos(a)*240 + perpX*offset;
+        const sy = 360 + Math.sin(a)*240 + perpY*offset;
+
+        ctx.beginPath();
+        ctx.moveTo(sx, sy);
+        ctx.lineTo(p.x, p.y);
+        ctx.stroke();
+
+        drawPipeText(ctx, a, offset, i, arr.length, it.d, it.m);
+      });
+    });
+  }
+
+  
+function normalizeValue(v){
+  const digits = String(v || "").replace(/\D/g, "");
+  if(!digits) return NaN;
+  const num = digits.padStart(3, "0");
+  return parseFloat(num.slice(0,-2) + "." + num.slice(-2));
+}
+
+function autoFormatMeterInput(input){
+  let val = input.value.replace(/\D/g, "");
+  if(!val) return;
+  val = val.padStart(3, "0");
+  const intPart = val.slice(0, -2);
+  const decPart = val.slice(-2);
+  input.value = intPart + "." + decPart;
+}
+
+function checkInflowHeights(){
+  const warningEl = document.getElementById("inflowWarning");
+  if(!warningEl) return;
+
+  const outRaw = (dom.outHoehe.value || "").replace(",", ".").trim();
+  const out = parseFloat(outRaw);
+
+  if(isNaN(out)){
+    warningEl.textContent = "";
+    // also clear any per-field errors
+    document.querySelectorAll(".inflow-item").forEach(block => {
+      const input = block.querySelector(".hoehe");
+    if(input){
+      input.addEventListener("blur", () => {
+        autoFormatMeterInput(input);
+        checkInflowHeights();
+      });
+    }
+      if(input){ input.style.border = ""; }
+      const msg = block.querySelector(".error-msg");
+      if(msg) msg.remove();
+    });
+    return;
+  }
+
+  let hasError = false;
+
+  document.querySelectorAll(".inflow-item").forEach(block => {
+    const input = block.querySelector(".hoehe");
+    if(input){
+      input.addEventListener("blur", () => {
+        autoFormatMeterInput(input);
+        checkInflowHeights();
+      });
+    }
+    if(!input) return;
+
+    const valRaw = (input.value || "").replace(",", ".").trim();
+    const val = parseFloat(valRaw);
+
+    // reset previous state
+    input.style.border = "";
+    const old = block.querySelector(".error-msg");
+    if(old) old.remove();
+
+    // RULE: Einlauf darf NICHT tiefer sein als Auslauf
+    // User logic: val < out => Fehler
+    if(!isNaN(val) && val < out){
+      hasError = true;
+
+      // mark field
+      input.style.border = "2px solid #dc2626";
+
+      // inline message
+      const err = document.createElement("div");
+      err.className = "error-msg";
+      err.style.color = "#dc2626";
+      err.style.fontSize = "12px";
+      err.style.marginTop = "4px";
+      err.textContent = "⚠️ Einlauf tiefer als Auslauf";
+      input.parentNode.appendChild(err);
+    }
+  });
+
+  warningEl.textContent = hasError 
+    ? "⚠️ Einlauf liegt tiefer als Auslauf – bitte prüfen"
+    : "";
+}
+
+function triggerDraw(){
+    clearTimeout(drawTimeout);
+    drawTimeout = setTimeout(drawGraphic, 40);
+  }
+
+  function getPhotoNotes(){
+    return [...dom.photoPreview.querySelectorAll(".photoItem")].map(el => el.querySelector(".photoNote").value || "");
+  }
+
+  function collectFields(){
+    return {
+      projektname: dom.projektname.value,
+      baustelle: dom.baustelle.value,
+      datum: dom.datum.value,
+      uhrzeit: dom.uhrzeit.value,
+      mitarbeiter: dom.mitarbeiter.value,
+      
+      standort: dom.standort.value,
+      schachtTyp: dom.schachtTyp.value,
+      zugaenglichkeit: dom.zugaenglichkeit.value,
+      form: dom.form.value,
+      shaft: dom.shaft.value,
+      shaftCustom: dom.shaftCustom.value,
+      deckelDurchmesser: dom.deckelDurchmesser.value,
+      tiefe: dom.tiefe.value,
+      schachtMaterial: dom.schachtMaterial.value,
+      zustand: dom.zustand.value,
+      deckelzustand: dom.deckelzustand.value,
+      geruch: dom.geruch.value,
+      wasserstand: dom.wasserstand.value,
+      verschmutzung: dom.verschmutzung.value,
+      bemerkungen: dom.bemerkungen.value,
+      outD: dom.outD.value,
+      outDCustom: dom.outDCustom.value,
+      outHoehe: dom.outHoehe.value,
+      outM: dom.outM.value,
+      wasserart: dom.wasserart.value,
+      deckelMaterial: dom.deckelMaterial.value
+    };
+  }
+
+  function saveState(){
+    try{
+      const data = {
+        fields: collectFields(),
+        inflows: [],
+        photos: [],
+        photoNotes: [],
+        signature: dom.signature.toDataURL("image/png")
+      };
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+      setSaveStatus("Autosave aktiv – zuletzt gespeichert um " + new Date().toLocaleTimeString("de-CH", {hour:"2-digit", minute:"2-digit"}));
+    } catch(err){
+      console.error(err);
+      setSaveStatus("Speichern fehlgeschlagen.");
+    }
+  }
+
+  function renderPhoto(src, note = ""){
+    const div = document.createElement("div");
+    div.className = "photoItem";
+    div.innerHTML = `
+      <button class="photoDelete" type="button">×</button><img src="${src}"><select class="photoSelect"><option value="">-- Auswahl --</option><option>Deckel</option><option>Aufstiegshilfe (Leiter)</option><option>Risse</option><option>Anschluss defekt</option><option>Allgemein</option><option>Bankett</option><option>Schachtring</option><option>Wurzeleinwuchs</option></select><input class="photoNote" type="text" placeholder="oder eigene Beschreibung" value="${String(note).replace(/"/g, "&quot;")}">
+    `;
+    div.querySelector(".photoDelete").addEventListener("click", () => {
+      const img = div.querySelector("img");
+      const idx = photoStore.indexOf(img.src);
+      if(idx >= 0) photoStore.splice(idx, 1);
+      div.remove();
+      saveState();
+    });
+    div.querySelector(".photoNote").addEventListener("input", saveState);
+
+    div.querySelector(".photoSelect").addEventListener("change", (e) => {
+      const input = div.querySelector(".photoNote");
+      input.value = e.target.value;
+      saveState();
+    });
+    dom.photoPreview.appendChild(div);
+  }
+
+  function compressToDataURL(file, callback){
+    const reader = new FileReader();
+    reader.onload = e => {
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement("canvas");
+        const maxW = Math.min(1600, img.width);
+        const scale = maxW / img.width;
+        canvas.width = Math.round(img.width * scale);
+        canvas.height = Math.round(img.height * scale);
+        canvas.getContext("2d").drawImage(img, 0, 0, canvas.width, canvas.height);
+        callback(canvas.toDataURL("image/jpeg", 0.9));
+      };
+      img.src = e.target.result;
+    };
+    reader.readAsDataURL(file);
+  }
+
+  function addPhotos(){
+    const files = [...dom.photoInput.files];
+    files.forEach(file => {
+      compressToDataURL(file, dataUrl => {
+        photoStore.push(dataUrl);
+        renderPhoto(dataUrl);
+        saveState();
+      });
+    });
+    dom.photoInput.value = "";
+  }
+
+  
+function updateDiameterOptions(selectEl, material){
+  const oldValue = selectEl.value;
+  let options = [];
+
+  if(material === "Beton"){
+    options = ["DN 100","DN 150","DN 200"];
+  }
+
+  if(material === "PVC"){
+    options = ["110 mm","125 mm","160 mm","200 mm"];
+  }
+
+  if(material === "Steinzeug"){
+    options = ["DN 100","DN 150","DN 200"];
+  }
+
+  if(material === "Unbekannt" || material === "Saniert"){
+    options = ["100 mm","120 mm","150 mm","200 mm"];
+  }
+
+  selectEl.innerHTML = options.map(o => `<option>${o}</option>`).join("");
+
+  const map = {
+    "DN 100": "110 mm",
+    "DN 150": "160 mm",
+    "DN 200": "200 mm",
+    "110 mm": "DN 100",
+    "160 mm": "DN 150",
+    "200 mm": "DN 200"
+  };
+
+  if(map[oldValue] && options.includes(map[oldValue])){
+    selectEl.value = map[oldValue];
+  } else if(options.includes(oldValue)){
+    selectEl.value = oldValue;
+  } else {
+    selectEl.value = options[0];
+  }
+}
+
+function bindInflowEvents(block){
+    block.querySelector(".delete").addEventListener("click", () => {
+      block.remove();
+      triggerDraw();
+      saveState();
+    });
+    
+    const materialSelect = block.querySelector(".m");
+    const diameterSelect = block.querySelector(".d");
+
+    if(materialSelect && diameterSelect){
+      updateDiameterOptions(diameterSelect, materialSelect.value);
+
+      materialSelect.addEventListener("change", () => {
+        updateDiameterOptions(diameterSelect, materialSelect.value);
+        saveState();
+      });
+    }
+
+    block.querySelectorAll("input, select").forEach(el => {
+      el.addEventListener("input", () => { triggerDraw(); saveState(); });
+      el.addEventListener("change", () => { triggerDraw(); saveState(); });
+    });
+  }
+
+  function addInflow(data = null){
+    const block = document.createElement("div");
+    block.className = "inner inflow-item";
+    block.innerHTML = `
+      <button class="delete" type="button">×</button>
+      <label>Position</label><select class="pos">
+        ${[1,2,3,4,5,6,7,8,9,10,11,12].map(x => `<option ${x===6?'selected':''}>${x}</option>`).join("")}
+      </select>
+      <label>Material</label><select class="m"><option>Beton</option><option>PVC</option><option>Steinzeug</option><option>Unbekannt</option><option>Saniert</option></select>
+      <label>Durchmesser</label><select class="d"><option>100 mm</option><option>120 mm</option><option>150 mm</option><option>200 mm</option></select>
+      <label>Höhe</label><input class="hoehe" type="text" placeholder="z. B. 0.60">
+      <label>Durchmesser individuell</label><input class="dCustom" type="text" placeholder="z. B. 130">
+    `;
+    dom.inflows.appendChild(block);
+
+    if(data){
+      block.querySelector(".pos").value = data.pos || "3";
+      block.querySelector(".d").value = data.d || "100 mm";
+      block.querySelector(".dCustom").value = data.dCustom || "";
+      block.querySelector(".hoehe").value = data.hoehe || "";
+      block.querySelector(".m").value = data.m || "Beton";
+    }
+
+    bindInflowEvents(block);
+    triggerDraw();
+    saveState();
+  }
+
+  function loadState(){
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if(!raw) return false;
+    try{
+      const data = JSON.parse(raw);
+      Object.entries(data.fields || {}).forEach(([key, value]) => {
+        if(dom[key]) dom[key].value = value;
+      });
+
+      dom.inflows.innerHTML = "";
+      addInflow();
+
+      photoStore.length = 0;
+      dom.photoPreview.innerHTML = "";
+
+      if(data.signature){
+        const img = new Image();
+        img.onload = () => {
+          const ctx = dom.signature.getContext("2d");
+          ctx.clearRect(0,0,dom.signature.width,dom.signature.height);
+          ctx.drawImage(img, 0, 0, dom.signature.width, dom.signature.height);
+        };
+        img.src = data.signature;
+      }
+
+      triggerDraw();
+      setSaveStatus("Gespeicherte Daten geladen.");
+      return true;
+    } catch(err){
+      console.error(err);
+      return false;
+    }
+  }
+
+  function resetApp(){
+    if(!confirm("Wirklich alle gespeicherten Daten löschen?")) return;
+    localStorage.removeItem(STORAGE_KEY);
+    location.reload();
+  }
+
+  function enableEnterNavigation(){
+    document.addEventListener("keydown", e => {
+      const target = e.target;
+      if(e.key !== "Enter") return;
+      if(target.tagName === "TEXTAREA" || target.type === "file") return;
+
+      const fields = [...document.querySelectorAll("input, select, textarea")].filter(el => el.offsetParent !== null);
+      const index = fields.indexOf(target);
+      if(index >= 0 && index < fields.length - 1){
+        e.preventDefault();
+        fields[index + 1].focus();
+      }
+    });
+  }
+
+  function setupSignaturePad(){
+    const canvas = dom.signature;
+    const ctx = canvas.getContext("2d");
+    ctx.lineWidth = 3;
+    ctx.lineCap = "round";
+    ctx.strokeStyle = "#111";
+    let drawing = false;
+
+    function pointFromEvent(e){
+      const rect = canvas.getBoundingClientRect();
+      const touch = e.touches ? e.touches[0] : e;
+      const scaleX = canvas.width / rect.width;
+      const scaleY = canvas.height / rect.height;
+      return {
+        x: (touch.clientX - rect.left) * scaleX,
+        y: (touch.clientY - rect.top) * scaleY
+      };
+    }
+
+    function start(e){
+      drawing = true;
+      const p = pointFromEvent(e);
+      ctx.beginPath();
+      ctx.moveTo(p.x, p.y);
+      e.preventDefault();
+    }
+
+    function move(e){
+      if(!drawing) return;
+      const p = pointFromEvent(e);
+      ctx.lineTo(p.x, p.y);
+      ctx.stroke();
+      e.preventDefault();
+    }
+
+    function end(){
+      if(!drawing) return;
+      drawing = false;
+      saveState();
+    }
+
+    canvas.addEventListener("mousedown", start);
+    canvas.addEventListener("mousemove", move);
+    window.addEventListener("mouseup", end);
+
+    canvas.addEventListener("touchstart", start, {passive:false});
+    canvas.addEventListener("touchmove", move, {passive:false});
+    window.addEventListener("touchend", end, {passive:false});
+  }
+
+  function clearSignature(){
+    const ctx = dom.signature.getContext("2d");
+    ctx.clearRect(0,0,dom.signature.width,dom.signature.height);
+    saveState();
+  }
+
+  function isCanvasBlank(canvas){
+    const blank = document.createElement("canvas");
+    blank.width = canvas.width;
+    blank.height = canvas.height;
+    return canvas.toDataURL() === blank.toDataURL();
+  }
+
+  function exportPDF(mode = "save"){
+    try{
+      const { jsPDF } = window.jspdf || {};
+      if(!jsPDF){
+        alert("PDF Bibliothek konnte nicht geladen werden.");
+        return;
+      }
+
+      const pdf = new jsPDF("p","mm","a4");
+      const pageW = 210;
+      const pageH = 297;
+
+      pdf.setFont("helvetica","bold");
+      pdf.setFontSize(18);
+      pdf.text("Schachtprotokoll", 12, 14);
+      pdf.setFont("helvetica","normal");
+      pdf.setFontSize(10);
+      pdf.text("Datum: " + (dom.datum.value || "-"), 160, 14);
+
+      const imgData = dom.grafik.toDataURL("image/png");
+      const imgProps = pdf.getImageProperties(imgData);
+      const boxX = 10, boxY = 22, boxW = 94, boxH = 118;
+      let gw = boxW - 8;
+      let gh = (imgProps.height * gw) / imgProps.width;
+      if(gh > boxH - 8){
+        gh = boxH - 8;
+        gw = (imgProps.width * gh) / imgProps.height;
+      }
+      pdf.rect(boxX, boxY, boxW, boxH);
+      pdf.addImage(imgData, "PNG", boxX + (boxW - gw)/2, boxY + (boxH - gh)/2, gw, gh);
+
+      let x = 108;
+      let y = 26;
+
+      const section = (title) => {
+        pdf.setFont("helvetica","bold");
+        pdf.setFontSize(11);
+        pdf.text(title, x, y);
+        y += 6;
+      };
+
+      const row = (label, value) => {
+        pdf.setFont("helvetica","bold");
+        pdf.setFontSize(9);
+        pdf.text(label + ":", x, y);
+        pdf.setFont("helvetica","normal");
+        const lines = pdf.splitTextToSize(String(value || "-"), 58);
+        pdf.text(lines, x + 30, y);
+        y += Math.max(5, lines.length * 4.2);
+      };
+
+      section("Allgemein");
+      row("Projekt", dom.projektname.value);
+      row("Baustelle", dom.baustelle.value);
+      row("Adresse", dom.standort.value);
+      row("Mitarbeiter", dom.mitarbeiter.value);
+      row("Schacht-Nr.", dom.schachtNummer.value);
+
+      y += 2;
+      section("Schacht");
+      row("Typ", dom.schachtTyp.value);
+      row("Wasserart", dom.wasserart.value);
+      row("Zugang", dom.zugaenglichkeit.value);
+      row("Form", dom.form.value);
+      row("Ø", getShaftLabel());
+      row("Tiefe", ensureMeter(dom.tiefe.value));
+      row("Material", dom.schachtMaterial.value);
+      row("Zustand", dom.zustand.value);
+      row("Deckel", dom.deckelzustand.value);
+      row("Deckelmaterial", dom.deckelMaterial.value);
+      row("Geruch", dom.geruch.value);
+      row("Wasser", dom.wasserstand.value);
+      row("Verschmutzung", dom.verschmutzung.value);
+
+      y += 2;
+      section("Normprüfung");
+      const normResult = getNormCheckResult();
+
+      if(normResult.status === "erfüllt"){
+        pdf.setTextColor(22, 163, 74);
+      } else {
+        pdf.setTextColor(220, 38, 38);
+      }
+
+      row("Ergebnis", normResult.status === "erfüllt" ? "Erfüllt" : "Nicht erfüllt");
+      if(normResult.reason){
+        row("Hinweis", normResult.reason);
+      }
+
+      pdf.setTextColor(0, 0, 0);
+
+      y += 2;
+
+      const colIndex = x;
+      const colPosRight = x + 13;
+      const colD = x + 16;
+      const colM = x + 32;
+      const colH = x + 65;
+
+      const drawPipeRow = (item, indexText, posY) => {
+        const d = ensureMm((item.dCustom || "").trim() || item.d || "-");
+        const h = ensureMeter(item.hoehe || "-");
+
+        pdf.setFont("helvetica","normal");
+        pdf.setFontSize(8.5);
+
+        if(indexText){
+          pdf.text(indexText, colIndex, posY);
+        }
+
+        pdf.text(`${item.pos} Uhr`, colPosRight, posY, { align: "right" });
+        pdf.text(d, colD, posY);
+        pdf.text(item.m || "-", colM, posY);
+        pdf.text(h, colH, posY, { align: "right" });
+      };
+
+      section("Auslauf");
+      drawPipeRow({
+        pos: "12",
+        d: getOutLabel(),
+        dCustom: "",
+        hoehe: dom.outHoehe.value,
+        m: dom.outM.value
+      }, "", y);
+      y += 6;
+
+      const inflows = collectInflows();
+
+      section("Einläufe");
+      const firstPageLimit = 205;
+      const startY = boxY + boxH + 2;
+      const lineHeight = 5.5;
+
+      if(startY + inflows.length * lineHeight <= firstPageLimit){
+        inflows.forEach((el, i) => {
+          drawPipeRow(el, `${i+1}.`, y);
+          y += lineHeight;
+        });
+      } else {
+        const spaceAvailable = Math.max(0, Math.floor((firstPageLimit - startY) / lineHeight));
+        const firstItems = inflows.slice(0, spaceAvailable);
+        const restItems = inflows.slice(spaceAvailable);
+
+        firstItems.forEach((el, i) => {
+          drawPipeRow(el, `${i+1}.`, y);
+          y += lineHeight;
+        });
+
+        if(restItems.length){
+          pdf.addPage();
+          pdf.setFont("helvetica","bold");
+          pdf.setFontSize(16);
+          pdf.text("Einläufe – Fortsetzung", 10, 16);
+          let cy = 28;
+
+          restItems.forEach((el, i) => {
+            if(cy > 280){
+              pdf.addPage();
+              cy = 20;
+            }
+            drawPipeRow(el, `${i + firstItems.length + 1}.`, cy);
+            cy += 7;
+          });
+        }
+      }
+
+      // Back to first page for note / signature / photo grid
+      pdf.setPage(1);
+
+      
+      pdf.setFont("helvetica","bold");
+      pdf.setFontSize(10.5);
+      
+      pdf.setFont("helvetica","normal");
+      pdf.setFontSize(9.5);
+      const noteLines = pdf.splitTextToSize(dom.bemerkungen.value || "-", 88);
+      pdf.text(noteLines, 12, 156);
+
+      if(!isCanvasBlank(dom.signature)){
+        pdf.setFont("helvetica","bold");
+        pdf.setFontSize(10);
+        
+        
+        
+      }
+
+      const notes = getPhotoNotes();
+      const firstPagePhotos = Math.min(photoStore.length, 6);
+
+      if (firstPagePhotos > 0) {
+        pdf.setFont("helvetica","bold");
+        pdf.setFontSize(10);
+        
+
+        const imgSize = 45; // 5.0 cm
+        const gap = 5;
+
+        // Fotos exakt unter dem linken Grafik-Block positionieren
+        const totalGridWidth = imgSize * 2 + gap;
+        const startX = boxX + (boxW - totalGridWidth) / 2;
+        const startY = boxY + boxH + 2;
+
+        for (let i = 0; i < firstPagePhotos; i++) {
+          const col = i % 2;
+          const row = Math.floor(i / 2);
+
+          const x = startX + col * (imgSize + gap);
+          const yPos = startY + row * (imgSize + gap);
+
+          const src = photoStore[i];
+          pdf.addImage(src, "JPEG", x, yPos, imgSize, imgSize);
+
+          pdf.setFont("helvetica","normal");
+          pdf.setFontSize(8);
+          const photoNote = (notes[i] || "").trim();
+          if (photoNote) {
+            pdf.setFontSize(7.5);
+            const noteLines = pdf.splitTextToSize(photoNote, imgSize);
+            pdf.text(noteLines, x + imgSize / 2, yPos + imgSize + 3, { align: "center" });
+          }
+        }
+      }
+
+      for(let i = 6; i < photoStore.length; i++){
+        const src = photoStore[i];
+        pdf.addPage();
+        const p = pdf.getImageProperties(src);
+        const ratio = p.width / p.height;
+        const maxW = 190, maxH = 120;
+        let fw = maxW, fh = fw / ratio;
+        if(fh > maxH){
+          fh = maxH;
+          fw = fh * ratio;
+        }
+        pdf.setFont("helvetica","bold");
+        pdf.setFontSize(12);
+        pdf.addImage(src, "JPEG", (pageW - fw) / 2, 20, fw, fh);
+        pdf.setFont("helvetica","normal");
+        pdf.setFontSize(10);
+        pdf.text(pdf.splitTextToSize(notes[i] || "-", 185), 10, 150);
+      }
+
+      if(mode === "preview"){
+        window.open(pdf.output("bloburl"), "_blank");
+      } else {
+        const nummer = (dom.schachtNummer.value || "Unbekannt").replace(/[^a-z0-9]/gi, "_");
+        pdf.save(`Schacht_${nummer}.pdf`);
+      }
+    } catch(err){
+      console.error(err);
+      alert("Beim PDF ist ein Fehler aufgetreten.");
+    }
+  }
+
+  function bindBaseFieldEvents(){
+    document.querySelectorAll("input, select, textarea").forEach(el => {
+      el.addEventListener("input", () => {
+        if(["form","shaft","shaftCustom","outD","outDCustom","outM"].includes(el.id)) triggerDraw();
+        saveState();
+      });
+      el.addEventListener("change", () => {
+        if(["form","shaft","shaftCustom","outD","outDCustom","outM"].includes(el.id)) triggerDraw();
+        saveState();
+      });
+    });
+  }
+
+  
+  function saveMasterData(){
+    const data = {
+      projektname: dom.projektname.value,
+      baustelle: dom.baustelle.value,
+      standort: dom.standort.value,
+      mitarbeiter: dom.mitarbeiter.value
+    };
+    localStorage.setItem(MASTER_KEY, JSON.stringify(data));
+    alert("Stammdaten gespeichert");
+  }
+
+  function loadMasterData(){
+    const raw = localStorage.getItem(MASTER_KEY);
+    if(!raw) return;
+    try{
+      const data = JSON.parse(raw);
+      dom.projektname.value = data.projektname || "";
+      dom.baustelle.value = data.baustelle || "";
+      dom.standort.value = data.standort || "";
+      dom.mitarbeiter.value = data.mitarbeiter || "";
+      dom.schachtNummer.value = "";
+    }catch(e){}
+  }
+
+  function clearMasterData(){
+    localStorage.removeItem(MASTER_KEY);
+    const idsToClear = ["projektname", "baustelle", "standort", "adresse", "schachtNummer", "schacht"];
+    idsToClear.forEach(id => {
+      const el = document.getElementById(id);
+      if(el) el.value = "";
+    });
+    if(typeof saveState === "function") saveState();
+    alert("Stammdaten gelöscht");
+  }
+
+  function bindActionButtons(){
+    dom.addInflowBtn.addEventListener("click", () => { vibrate(); addInflow(); });
+    dom.photoInput.addEventListener("change", addPhotos);
+    dom.clearSignatureBtn.addEventListener("click", clearSignature);
+    dom.saveSignatureBtn.addEventListener("click", () => { vibrate(); saveState(); });
+    dom.pdfBtn.addEventListener("click", () => { 
+      vibrate();
+
+      let errors = [];
+
+      if(!dom.schachtNummer.value){
+        errors.push("Schacht-Nummer fehlt");
+      }
+
+      if(!dom.tiefe.value){
+        errors.push("Tiefe fehlt");
+      }
+
+      const schachtTyp = dom.schachtTyp.value;
+      const erlaubtOhneEinlauf = 
+        schachtTyp.includes("Einlaufschacht") ||
+        schachtTyp.includes("Dachwasserschacht");
+
+      if(!erlaubtOhneEinlauf && collectInflows().length === 0){
+        errors.push("Mindestens ein Einlauf erforderlich");
+      }
+
+      if(errors.length > 0){
+        alert(errors.join("\n"));
+        return;
+      }
+
+      exportPDF("save"); 
+    });
+    dom.previewBtn.addEventListener("click", () => { vibrate(); exportPDF("preview"); });
+    dom.resetBtn.addEventListener("click", resetApp);
+    if(dom.saveMasterBtn) dom.saveMasterBtn.addEventListener("click", saveMasterData);
+    if(dom.clearMasterBtn) dom.clearMasterBtn.addEventListener("click", clearMasterData);
+  }
+
+  if("serviceWorker" in navigator){
+    window.addEventListener("load", () => {
+      navigator.serviceWorker.register("sw.js").catch(console.error);
+    });
+  }
+
+  bindBaseFieldEvents();
+  bindActionButtons();
+  enableEnterNavigation();
+  setupSignaturePad();
+  if(dom.outHoehe){
+    dom.outHoehe.addEventListener("blur", () => {
+      autoFormatMeterInput(dom.outHoehe);
+      checkInflowHeights();
+    });
+  }
+  if(dom.outHoehe){ dom.outHoehe.addEventListener('input', checkInflowHeights); dom.outHoehe.addEventListener('change', checkInflowHeights); }
+
+// LIVE validation (Option A)
+document.addEventListener("input", (e) => {
+  if(e.target.classList.contains("hoehe") || e.target.id === "outHoehe"){
+    checkInflowHeights();
+  }
+});
+
+
+
+  function updateHoeheLock(){
+    const typ = dom.schachtTyp.value;
+    if(typ.includes("KS")){
+      dom.tiefe.readOnly = true;
+      dom.tiefe.style.background = "#e5e7eb";
+    } else {
+      dom.tiefe.readOnly = false;
+      dom.tiefe.style.background = "";
+    }
+  }
+
+  if(dom.schachtTyp){
+    dom.schachtTyp.addEventListener("change", () => {
+      const val = dom.schachtTyp.value;
+
+      if(val.includes("RW") || val.includes("DW")){
+        dom.wasserart.value = "Regenwasser";
+      } else if(val.includes("KS") || val.includes("SS") || val.includes("ÖA")){
+        dom.wasserart.value = "Schmutzwasser";
+      }
+
+      updateHoeheLock();
+      saveState();
+    });
+  }
+
+  if(dom.outM){
+    dom.outM.addEventListener("change", () => {
+      updateDiameterOptions(dom.outD, dom.outM.value);
+      triggerDraw();
+      saveState();
+    });
+  }
+
+  if(dom.outHoehe){
+    dom.outHoehe.addEventListener("input", () => {
+      if(dom.schachtTyp.value.includes("KS")){
+        dom.tiefe.value = dom.outHoehe.value;
+      }
+    });
+  }
+
+  loadMasterData();
+  updateDiameterOptions(dom.outD, dom.outM.value);
+  updateHoeheLock();
+  triggerDraw();
+  if(!loadState()){
+    dom.inflows.innerHTML = "";
+    addInflow();
+    triggerDraw();
+    saveState();
+  } else {
+    dom.schachtNummer.value = "";
+    updateDiameterOptions(dom.outD, dom.outM.value);
+    updateHoeheLock();
+    triggerDraw();
+  }
+  // Ensure date/time set last
+  setTimeout(autoDateTime, 0);
+})();
+</script></body></html>
