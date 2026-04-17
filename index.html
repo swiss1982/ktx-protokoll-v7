@@ -1379,4 +1379,13 @@ document.addEventListener("input", (e) => {
   // Ensure date/time set last
   setTimeout(autoDateTime, 0);
 })();
-</script></body></html>
+</script>
+
+<script>
+if ("serviceWorker" in navigator) {
+  navigator.serviceWorker.register("sw.js");
+}
+</script>
+
+</body>
+</html>
