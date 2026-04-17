@@ -1,7 +1,7 @@
 {
   "name": "KanalTech",
   "short_name": "KanalTech",
-  "start_url": "/",
+  "start_url": "/ktx-protokoll-v7/index.html",
   "display": "standalone",
   "background_color": "#0f172a",
   "theme_color": "#0f172a",
